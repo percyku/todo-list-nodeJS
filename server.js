@@ -1,5 +1,7 @@
 const http = require("http");
 const { v4: uuidv4 } = require("uuid");
+const headers = require("./headers");
+const successHandle = require("./successHandle");
 const errHandle = require("./errorHandle");
 const todos = [
   {
@@ -13,29 +15,13 @@ const todos = [
 ];
 
 const requestListner = (req, res) => {
-  const headers = {
-    "Access-Control-Allow-Headers":
-      "Content-Type, Authorization, Content-Length, X-Requested-With",
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "PATCH, POST, GET,OPTIONS,DELETE",
-    "Content-Type": "application/json",
-  };
-
   let body = "";
   req.on("data", (chunk) => {
-    // console.log(chunk);
     body += chunk;
   });
 
   if (req.url === "/todos" && req.method === "GET") {
-    res.writeHead(200, headers);
-    res.write(
-      JSON.stringify({
-        status: "sucess",
-        data: todos,
-      }),
-    );
-    res.end();
+    successHandle(res, todos);
   } else if (req.url === "/todos" && req.method === "POST") {
     req.on("end", () => {
       try {
@@ -48,14 +34,7 @@ const requestListner = (req, res) => {
           };
 
           todos.push(todo);
-          res.writeHead(200, headers);
-          res.write(
-            JSON.stringify({
-              status: "sucess",
-              data: todos,
-            }),
-          );
-          res.end();
+          successHandle(res, todos);
         } else {
           errHandle(res);
         }
@@ -65,29 +44,14 @@ const requestListner = (req, res) => {
     });
   } else if (req.url === "/todos" && req.method === "DELETE") {
     todos.length = 0;
-
-    res.writeHead(200, headers);
-    res.write(
-      JSON.stringify({
-        status: "sucess",
-        data: todos,
-      }),
-    );
-    res.end();
+    successHandle(res, todos);
   } else if (req.url.startsWith("/todos/") && req.method === "DELETE") {
     const id = req.url.split("/").pop();
     const idx = todos.findIndex((element) => element.id === id);
 
     if (idx !== -1) {
       todos.splice(idx, 1);
-      res.writeHead(200, headers);
-      res.write(
-        JSON.stringify({
-          status: "sucess",
-          data: todos,
-        }),
-      );
-      res.end();
+      successHandle(res, todos);
     } else {
       errHandle(res);
     }
